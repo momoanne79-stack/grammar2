@@ -136,11 +136,12 @@
             font-size: 22px;
             font-weight: 800;
             color: #2c3e50;
-            margin-bottom: 12px;
+            margin-bottom: 25px;
             word-break: keep-all;
             background-color: #f1f9f5;
             padding: 15px;
             border-radius: 12px;
+            line-height: 1.4;
         }
         .question-en u {
             text-decoration: underline;
@@ -149,11 +150,17 @@
             text-underline-offset: 4px;
             color: #d35400;
         }
+        
+        /* 한글 해석 (기본적으로 숨김 처리) */
         .question-kr {
+            display: none;
             font-size: 16px;
-            font-weight: 600;
-            color: #7f8c8d;
-            margin-bottom: 25px;
+            font-weight: 700;
+            color: #2980b9;
+            margin-bottom: 15px;
+            background-color: #ebf5fb;
+            padding: 10px;
+            border-radius: 8px;
         }
         
         /* 객관식 버튼 그리드 (2열 3행) */
@@ -276,7 +283,6 @@
     <div class="main-content">
         <div class="card">
             <div class="question-en" id="en-sentence">I want <u>to dance</u>.</div>
-            <div class="question-kr" id="kr-meaning">나는 춤추는 것을 원한다.</div>
             
             <div class="options-grid" id="options-grid">
                 <button class="option-btn" onclick="checkAnswer(0)">명사적 용법</button>
@@ -287,7 +293,9 @@
                 <button class="option-btn" onclick="checkAnswer(5)">부사적(결과)</button>
             </div>
             
+            <div class="question-kr" id="kr-meaning">나는 춤추는 것을 원한다.</div>
             <div class="explanation-box" id="explanation-box"></div>
+            
             <button class="next-btn" id="next-btn" onclick="nextQuestion()">다음 문제 ➔</button>
         </div>
     </div>
@@ -300,63 +308,62 @@
 </div>
 
 <script>
-    // 카테고리 정의: 0=명사, 1=형용사, 2=부사(목적), 3=부사(판단), 4=부사(원인), 5=부사(결과)
-    // 50문제를 모두 섞어서 배치했습니다.
+    // 50문제 데이터
     const quizData = [
-        { en: "My dream is <u>to travel</u> around the world.", kr: "내 꿈은 세계를 여행하는 것이다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, be동사 뒤에서 '보어'로 쓰였습니다." },
-        { en: "I went to the store <u>to buy</u> some milk.", kr: "나는 우유를 사기 위해 가게에 갔다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, 앞의 의지동사(went)의 목적을 나타냅니다." },
-        { en: "She was surprised <u>to hear</u> the news.", kr: "그녀는 그 소식을 듣고 놀랐다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(surprised) 뒤에서 놀란 감정의 원인을 설명합니다." },
-        { en: "I have many friends <u>to play</u> with.", kr: "나는 함께 놀 친구가 많다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 바로 앞 명사(friends)를 수식합니다." },
-        { en: "He lived <u>to be</u> 99.", kr: "그는 살아서 99세가 되었다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(live) 뒤에 쓰여 '결과적으로 ~하게 되다'라는 뜻을 나타냅니다." },
-        { en: "He must be crazy <u>to say</u> so.", kr: "그렇게 말하는 것을 보니 그는 미친 게 틀림없다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(crazy)와 추측의미 조동사(must) 뒤에서 판단의 근거가 됩니다." },
-        { en: "It is impossible <u>to finish</u> this in a day.", kr: "이것을 하루 만에 끝내는 것은 불가능하다.", type: 0, exp: "명사적 용법: It 가주어 자리를 대신하는 '진주어'로 쓰였습니다." },
-        { en: "She studied hard <u>to pass</u> the exam.", kr: "그녀는 시험에 합격하기 위해 열심히 공부했다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며 의지동사(studied)와 함께 쓰였습니다." },
-        { en: "I am so happy <u>to meet</u> you.", kr: "너를 만나서 매우 기쁘다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(happy) 뒤에서 기쁨이라는 감정의 원인이 됩니다." },
-        { en: "I need something <u>to drink</u>.", kr: "나는 마실 무언가가 필요하다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 대명사(something)를 수식합니다." },
+        { en: "My dream is <u>to travel</u> around the world.", kr: "[해석] 내 꿈은 세계를 여행하는 것이다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, be동사 뒤에서 '보어'로 쓰였습니다." },
+        { en: "I went to the store <u>to buy</u> some milk.", kr: "[해석] 나는 우유를 사기 위해 가게에 갔다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, 앞의 의지동사(went)의 목적을 나타냅니다." },
+        { en: "She was surprised <u>to hear</u> the news.", kr: "[해석] 그녀는 그 소식을 듣고 놀랐다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(surprised) 뒤에서 놀란 감정의 원인을 설명합니다." },
+        { en: "I have many friends <u>to play</u> with.", kr: "[해석] 나는 함께 놀 친구가 많다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 바로 앞 명사(friends)를 수식합니다." },
+        { en: "He lived <u>to be</u> 99.", kr: "[해석] 그는 살아서 99세가 되었다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(live) 뒤에 쓰여 '결과적으로 ~하게 되다'라는 뜻을 나타냅니다." },
+        { en: "He must be crazy <u>to say</u> so.", kr: "[해석] 그렇게 말하는 것을 보니 그는 미친 게 틀림없다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(crazy)와 추측의미 조동사(must) 뒤에서 판단의 근거가 됩니다." },
+        { en: "It is impossible <u>to finish</u> this in a day.", kr: "[해석] 이것을 하루 만에 끝내는 것은 불가능하다.", type: 0, exp: "명사적 용법: It 가주어 자리를 대신하는 '진주어'로 쓰였습니다." },
+        { en: "She studied hard <u>to pass</u> the exam.", kr: "[해석] 그녀는 시험에 합격하기 위해 열심히 공부했다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며 의지동사(studied)와 함께 쓰였습니다." },
+        { en: "I am so happy <u>to meet</u> you.", kr: "[해석] 너를 만나서 매우 기쁘다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(happy) 뒤에서 기쁨이라는 감정의 원인이 됩니다." },
+        { en: "I need something <u>to drink</u>.", kr: "[해석] 나는 마실 무언가가 필요하다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 대명사(something)를 수식합니다." },
         
-        { en: "He grew up <u>to be</u> a famous doctor.", kr: "그는 자라서 유명한 의사가 되었다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(grew up) 뒤에 쓰여 자라난 결과 의사가 되었음을 나타냅니다." },
-        { en: "He must be a genius <u>to solve</u> that puzzle.", kr: "그 퍼즐을 푸는 것을 보니 그는 천재임에 틀림없다.", type: 3, exp: "부사적 용법(판단): 추측 조동사(must be) 뒤에서 판단을 내린 확고한 근거를 설명합니다." },
-        { en: "I want <u>to dance</u>.", kr: "나는 춤추는 것을 원한다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 want의 '목적어'로 쓰였습니다." },
-        { en: "I studied hard <u>to succeed</u>.", kr: "나는 성공하기 위해서 열심히 공부했다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, 앞의 의지동사(studied)의 목적을 나타냅니다." },
-        { en: "We are sorry <u>to hear</u> about your loss.", kr: "당신의 상실에 대해 듣게 되어 유감입니다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(sorry) 뒤에서 유감스러운 감정의 원인을 나타냅니다." },
-        { en: "I have a lot of work <u>to do</u> today.", kr: "나는 오늘 해야 할 일이 많다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 바로 앞 명사(work)를 수식합니다." },
-        { en: "She awoke <u>to find</u> herself in a strange room.", kr: "그녀가 깨어나보니 자신이 낯선 방에 있다는 것을 알았다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(awoke) 뒤에 쓰여 깨어난 후에 알게 된 결과를 나타냅니다." },
-        { en: "You are foolish <u>to say</u> such a thing.", kr: "그런 말을 하다니 너는 어리석다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(foolish) 뒤에 쓰여 판단의 근거를 나타냅니다." },
-        { en: "<u>To master</u> English is not easy.", kr: "영어를 마스터하는 것은 쉽지 않다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 문장의 '주어'로 쓰였습니다." },
-        { en: "He turned on the TV <u>to watch</u> the news.", kr: "그는 뉴스를 보기 위해 TV를 켰다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, TV를 켠(turned on) 목적을 나타냅니다." },
+        { en: "He grew up <u>to be</u> a famous doctor.", kr: "[해석] 그는 자라서 유명한 의사가 되었다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(grew up) 뒤에 쓰여 자라난 결과 의사가 되었음을 나타냅니다." },
+        { en: "He must be a genius <u>to solve</u> that puzzle.", kr: "[해석] 그 퍼즐을 푸는 것을 보니 그는 천재임에 틀림없다.", type: 3, exp: "부사적 용법(판단): 추측 조동사(must be) 뒤에서 판단을 내린 확고한 근거를 설명합니다." },
+        { en: "I want <u>to dance</u>.", kr: "[해석] 나는 춤추는 것을 원한다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 want의 '목적어'로 쓰였습니다." },
+        { en: "I studied hard <u>to succeed</u>.", kr: "[해석] 나는 성공하기 위해서 열심히 공부했다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, 앞의 의지동사(studied)의 목적을 나타냅니다." },
+        { en: "We are sorry <u>to hear</u> about your loss.", kr: "[해석] 당신의 상실에 대해 듣게 되어 유감입니다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(sorry) 뒤에서 유감스러운 감정의 원인을 나타냅니다." },
+        { en: "I have a lot of work <u>to do</u> today.", kr: "[해석] 나는 오늘 해야 할 일이 많다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 바로 앞 명사(work)를 수식합니다." },
+        { en: "She awoke <u>to find</u> herself in a strange room.", kr: "[해석] 그녀가 깨어나보니 자신이 낯선 방에 있다는 것을 알았다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(awoke) 뒤에 쓰여 깨어난 후에 알게 된 결과를 나타냅니다." },
+        { en: "You are foolish <u>to say</u> such a thing.", kr: "[해석] 그런 말을 하다니 너는 어리석다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(foolish) 뒤에 쓰여 판단의 근거를 나타냅니다." },
+        { en: "<u>To master</u> English is not easy.", kr: "[해석] 영어를 마스터하는 것은 쉽지 않다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 문장의 '주어'로 쓰였습니다." },
+        { en: "He turned on the TV <u>to watch</u> the news.", kr: "[해석] 그는 뉴스를 보기 위해 TV를 켰다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, TV를 켠(turned on) 목적을 나타냅니다." },
         
-        { en: "He was disappointed <u>to fail</u> the test.", kr: "그는 시험에 떨어져서 실망했다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(disappointed) 뒤에서 실망한 감정의 원인이 됩니다." },
-        { en: "Give me a chair <u>to sit</u> on.", kr: "내가 앉을 의자를 하나 줘.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 바로 앞 명사(a chair)를 수식합니다." },
-        { en: "I hurried to the station only <u>to miss</u> the train.", kr: "나는 역으로 서둘러 갔지만 결국 기차를 놓치고 말았다.", type: 5, exp: "부사적 용법(결과): only to 구문은 '결국 ~하고 말았다'라는 부정적인 결과를 나타냅니다." },
-        { en: "He is very kind <u>to help</u> the poor man.", kr: "그 불쌍한 남자를 돕다니 그는 매우 친절하다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(kind) 뒤에서 성격 판단의 근거를 설명합니다." },
-        { en: "He decided <u>to quit</u> his job.", kr: "그는 직장을 그만두기로 결정했다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 decided의 '목적어'로 쓰였습니다." },
-        { en: "We stopped <u>to take</u> a rest.", kr: "우리는 휴식을 취하기 위해 멈췄다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, 멈춘(stopped) 목적을 설명합니다." },
-        { en: "I am pleased <u>to help</u> you.", kr: "당신을 돕게 되어 기쁩니다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(pleased) 뒤에서 기쁜 감정의 원인을 나타냅니다." },
-        { en: "This is the best way <u>to solve</u> the problem.", kr: "이것이 그 문제를 해결할 최고의 방법이다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 앞의 명사(way)를 꾸며줍니다." },
-        { en: "He worked hard only <u>to fail</u> again.", kr: "그는 열심히 일했지만 결국 다시 실패했다.", type: 5, exp: "부사적 용법(결과): only to가 실망스러운 최종 결과를 설명합니다." },
-        { en: "They must be angry <u>to shout</u> like that.", kr: "저렇게 소리치는 것을 보니 그들은 화가 난 게 틀림없다.", type: 3, exp: "부사적 용법(판단): 강한 추측(must be) 뒤에서 판단을 내린 결정적 근거입니다." },
+        { en: "He was disappointed <u>to fail</u> the test.", kr: "[해석] 그는 시험에 떨어져서 실망했다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(disappointed) 뒤에서 실망한 감정의 원인이 됩니다." },
+        { en: "Give me a chair <u>to sit</u> on.", kr: "[해석] 내가 앉을 의자를 하나 줘.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 바로 앞 명사(a chair)를 수식합니다." },
+        { en: "I hurried to the station only <u>to miss</u> the train.", kr: "[해석] 나는 역으로 서둘러 갔지만 결국 기차를 놓치고 말았다.", type: 5, exp: "부사적 용법(결과): only to 구문은 '결국 ~하고 말았다'라는 부정적인 결과를 나타냅니다." },
+        { en: "He is very kind <u>to help</u> the poor man.", kr: "[해석] 그 불쌍한 남자를 돕다니 그는 매우 친절하다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(kind) 뒤에서 성격 판단의 근거를 설명합니다." },
+        { en: "He decided <u>to quit</u> his job.", kr: "[해석] 그는 직장을 그만두기로 결정했다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 decided의 '목적어'로 쓰였습니다." },
+        { en: "We stopped <u>to take</u> a rest.", kr: "[해석] 우리는 휴식을 취하기 위해 멈췄다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며, 멈춘(stopped) 목적을 설명합니다." },
+        { en: "I am pleased <u>to help</u> you.", kr: "[해석] 당신을 돕게 되어 기쁩니다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(pleased) 뒤에서 기쁜 감정의 원인을 나타냅니다." },
+        { en: "This is the best way <u>to solve</u> the problem.", kr: "[해석] 이것이 그 문제를 해결할 최고의 방법이다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 앞의 명사(way)를 꾸며줍니다." },
+        { en: "He worked hard only <u>to fail</u> again.", kr: "[해석] 그는 열심히 일했지만 결국 다시 실패했다.", type: 5, exp: "부사적 용법(결과): only to가 실망스러운 최종 결과를 설명합니다." },
+        { en: "They must be angry <u>to shout</u> like that.", kr: "[해석] 저렇게 소리치는 것을 보니 그들은 화가 난 게 틀림없다.", type: 3, exp: "부사적 용법(판단): 강한 추측(must be) 뒤에서 판단을 내린 결정적 근거입니다." },
         
-        { en: "Her plan is <u>to study</u> abroad.", kr: "그녀의 계획은 유학을 가는 것이다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 문장의 '보어'로 쓰였습니다." },
-        { en: "I got up early <u>to catch</u> the first train.", kr: "나는 첫차를 타기 위해 일찍 일어났다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며 의지동사(got up)의 목적을 나타냅니다." },
-        { en: "They were excited <u>to see</u> their favorite singer.", kr: "그들은 가장 좋아하는 가수를 보게 되어 흥분했다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(excited) 뒤에서 흥분한 감정의 원인을 설명합니다." },
-        { en: "It's time <u>to go</u> to bed.", kr: "자러 갈 시간이다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 앞의 명사(time)를 수식합니다." },
-        { en: "The boy grew up <u>to become</u> a musician.", kr: "그 소년은 자라서 음악가가 되었다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(grew up) 뒤에서 성장한 결과를 나타냅니다." },
-        { en: "How careless of you <u>to lose</u> your umbrella!", kr: "우산을 잃어버리다니 너는 참 부주의하구나!", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(careless) 뒤에서 부주의하다고 판단한 이유입니다." },
-        { en: "I hope <u>to see</u> you again.", kr: "너를 다시 보기를 바란다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 hope의 '목적어'로 쓰였습니다." },
-        { en: "They ran fast not <u>to miss</u> the bus.", kr: "그들은 버스를 놓치지 않기 위해 빨리 달렸다.", type: 2, exp: "부사적 용법(목적): '~하지 않기 위해'로 해석되며 목적의 부정형입니다." },
-        { en: "I am sad <u>to say</u> goodbye.", kr: "작별인사를 하게 되어 슬프다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(sad) 뒤에서 슬픈 감정의 원인이 됩니다." },
-        { en: "Are there any books <u>to read</u>?", kr: "읽을 책이 좀 있니?", type: 1, exp: "형용사적 용법: '~할'로 해석되며 앞의 명사(books)를 수식합니다." },
+        { en: "Her plan is <u>to study</u> abroad.", kr: "[해석] 그녀의 계획은 유학을 가는 것이다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 문장의 '보어'로 쓰였습니다." },
+        { en: "I got up early <u>to catch</u> the first train.", kr: "[해석] 나는 첫차를 타기 위해 일찍 일어났다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며 의지동사(got up)의 목적을 나타냅니다." },
+        { en: "They were excited <u>to see</u> their favorite singer.", kr: "[해석] 그들은 가장 좋아하는 가수를 보게 되어 흥분했다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(excited) 뒤에서 흥분한 감정의 원인을 설명합니다." },
+        { en: "It's time <u>to go</u> to bed.", kr: "[해석] 자러 갈 시간이다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 앞의 명사(time)를 수식합니다." },
+        { en: "The boy grew up <u>to become</u> a musician.", kr: "[해석] 그 소년은 자라서 음악가가 되었다.", type: 5, exp: "부사적 용법(결과): 무의지 동사(grew up) 뒤에서 성장한 결과를 나타냅니다." },
+        { en: "How careless of you <u>to lose</u> your umbrella!", kr: "[해석] 우산을 잃어버리다니 너는 참 부주의하구나!", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(careless) 뒤에서 부주의하다고 판단한 이유입니다." },
+        { en: "I hope <u>to see</u> you again.", kr: "[해석] 너를 다시 보기를 바란다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 hope의 '목적어'로 쓰였습니다." },
+        { en: "They ran fast not <u>to miss</u> the bus.", kr: "[해석] 그들은 버스를 놓치지 않기 위해 빨리 달렸다.", type: 2, exp: "부사적 용법(목적): '~하지 않기 위해'로 해석되며 목적의 부정형입니다." },
+        { en: "I am sad <u>to say</u> goodbye.", kr: "[해석] 작별인사를 하게 되어 슬프다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(sad) 뒤에서 슬픈 감정의 원인이 됩니다." },
+        { en: "Are there any books <u>to read</u>?", kr: "[해석] 읽을 책이 좀 있니?", type: 1, exp: "형용사적 용법: '~할'로 해석되며 앞의 명사(books)를 수식합니다." },
         
-        { en: "He parted from his parents never <u>to see</u> them again.", kr: "그는 부모님과 헤어졌고 결코 다시는 그들을 보지 못했다.", type: 5, exp: "부사적 용법(결과): never to 구문은 '결국 두 번 다시 ~하지 못했다'라는 부정적 결과를 뜻합니다." },
-        { en: "She was brave <u>to enter</u> the dark room.", kr: "그 어두운 방에 들어가다니 그녀는 용감했다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(brave) 뒤에서 용감하다고 생각한 판단의 근거입니다." },
-        { en: "<u>To tell</u> a lie is bad.", kr: "거짓말을 하는 것은 나쁘다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 문장의 '주어'로 쓰였습니다." },
-        { en: "She exercises every day <u>to stay</u> healthy.", kr: "그녀는 건강을 유지하기 위해 매일 운동한다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며 의지동사(exercises)의 목적입니다." },
-        { en: "He was shocked <u>to see</u> the accident.", kr: "그는 그 사고를 보고 충격을 받았다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(shocked) 뒤에서 충격을 받은 감정의 원인을 나타냅니다." },
-        { en: "He made a promise <u>to help</u> me.", kr: "그는 나를 도와줄 약속을 했다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 명사(promise)를 꾸며줍니다." },
-        { en: "I forgot <u>to bring</u> my homework.", kr: "나는 숙제 가져오는 것을 잊었다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 forgot의 '목적어'로 쓰였습니다." },
-        { en: "I bought a house <u>to live</u> in.", kr: "나는 살 집을 샀다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 명사(a house)를 수식합니다." },
-        { en: "It is important <u>to read</u> many books.", kr: "많은 책을 읽는 것은 중요하다.", type: 0, exp: "명사적 용법: It 가주어에 대한 '진주어'로 쓰였습니다." },
-        { en: "We have a chance <u>to win</u> the game.", kr: "우리는 그 경기를 이길 기회가 있다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 명사(chance)를 수식합니다." }
+        { en: "He parted from his parents never <u>to see</u> them again.", kr: "[해석] 그는 부모님과 헤어졌고 결코 다시는 그들을 보지 못했다.", type: 5, exp: "부사적 용법(결과): never to 구문은 '결국 두 번 다시 ~하지 못했다'라는 부정적 결과를 뜻합니다." },
+        { en: "She was brave <u>to enter</u> the dark room.", kr: "[해석] 그 어두운 방에 들어가다니 그녀는 용감했다.", type: 3, exp: "부사적 용법(판단): 사람 성향 형용사(brave) 뒤에서 용감하다고 생각한 판단의 근거입니다." },
+        { en: "<u>To tell</u> a lie is bad.", kr: "[해석] 거짓말을 하는 것은 나쁘다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 문장의 '주어'로 쓰였습니다." },
+        { en: "She exercises every day <u>to stay</u> healthy.", kr: "[해석] 그녀는 건강을 유지하기 위해 매일 운동한다.", type: 2, exp: "부사적 용법(목적): '~하기 위해서'로 해석되며 의지동사(exercises)의 목적입니다." },
+        { en: "He was shocked <u>to see</u> the accident.", kr: "[해석] 그는 그 사고를 보고 충격을 받았다.", type: 4, exp: "부사적 용법(원인): 감정 형용사(shocked) 뒤에서 충격을 받은 감정의 원인을 나타냅니다." },
+        { en: "He made a promise <u>to help</u> me.", kr: "[해석] 그는 나를 도와줄 약속을 했다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 명사(promise)를 꾸며줍니다." },
+        { en: "I forgot <u>to bring</u> my homework.", kr: "[해석] 나는 숙제 가져오는 것을 잊었다.", type: 0, exp: "명사적 용법: '~것으로' 해석되며, 동사 forgot의 '목적어'로 쓰였습니다." },
+        { en: "I bought a house <u>to live</u> in.", kr: "[해석] 나는 살 집을 샀다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 명사(a house)를 수식합니다." },
+        { en: "It is important <u>to read</u> many books.", kr: "[해석] 많은 책을 읽는 것은 중요하다.", type: 0, exp: "명사적 용법: It 가주어에 대한 '진주어'로 쓰였습니다." },
+        { en: "We have a chance <u>to win</u> the game.", kr: "[해석] 우리는 그 경기를 이길 기회가 있다.", type: 1, exp: "형용사적 용법: '~할'로 해석되며 명사(chance)를 수식합니다." }
     ];
 
     let currentQuestionIndex = 0;
@@ -411,6 +418,8 @@
             btn.disabled = false;
         });
         
+        // 문제 풀기 전에는 해석과 해설, 다음 버튼 숨기기
+        krMeaningEl.style.display = 'none';
         explanationBox.style.display = 'none';
         nextBtn.style.display = 'none';
     }
@@ -441,6 +450,8 @@
             explanationBox.style.color = '#27ae60';
         }
 
+        // 정답을 체크하면 한글 해석과 해설 영역 나타나게 하기
+        krMeaningEl.style.display = 'block';
         explanationBox.style.display = 'block';
         nextBtn.style.display = 'block';
     }
@@ -453,6 +464,7 @@
         } else {
             enSentenceEl.innerHTML = '🎉 모든 학습 완료! 🎉';
             krMeaningEl.textContent = '수고하셨습니다. 50개의 to부정사 문장을 완벽하게 마스터했습니다.';
+            krMeaningEl.style.display = 'block';
             document.getElementById('options-grid').style.display = 'none';
             explanationBox.style.display = 'none';
             nextBtn.style.display = 'none';
